@@ -1,0 +1,14 @@
+FROM golang:1.19-alpine AS builder
+WORKDIR /app
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+RUN go build -o server ./cmd/api
+
+FROM alpine:3.20 AS runtime
+WORKDIR /app
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+COPY --from=builder /app/server ./server
+USER appuser
+EXPOSE 8081
+CMD ["./server"]
