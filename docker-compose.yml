@@ -10,6 +10,7 @@ services:
     restart: unless-stopped
     networks:
       - net
+    read_only: true
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8081/health"]
       interval: 30s
@@ -22,6 +23,8 @@ services:
       - ALL
     mem_limit: 256m
     cpus: "0.50"
+    secrets:
+      - secrets.example
 
   frontend:
     build:
@@ -39,6 +42,9 @@ services:
     restart: unless-stopped
     networks:
       - net
+    read_only: true
+    tmpfs:
+      - /tmp
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8080"]
       interval: 30s
@@ -51,7 +57,13 @@ services:
       - ALL
     mem_limit: 128m
     cpus: "0.25"
+    secrets:
+      - secrets.example
 
 networks:
   net:
     driver: bridge
+
+secrets:
+  secrets.example:
+    file: ./secrets/secrets.example
