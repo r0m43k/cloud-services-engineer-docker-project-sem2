@@ -3,3 +3,7 @@ frontend Dockerfile- вторая стадия запуска runtime. Порт:
 
 backend Dockerfile- первая стадия собирает Go-приложение на образе golang alpine
 backend Dockerfile- вторая стадия запускает файл на образе alpine на порту 8081
+
+Запуск:
+docker compose build
+docker compose up -d
