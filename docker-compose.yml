@@ -4,9 +4,8 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     image: ${BACKEND_IMAGE:-backend:latest}
-    container_name: backend
-    ports:
-      - "${BACKEND_HOST_PORT:-8081}:8081"
+    expose:
+      - "8081"
     restart: unless-stopped
     networks:
       - net
@@ -27,6 +26,47 @@ services:
     cpus: "${BACKEND_CPU:-0.50}"
     secrets:
       - secrets.example
+
+  backend-balancer:
+    image: nginxinc/nginx-unprivileged:1.27-alpine
+    ports:
+      - "${BACKEND_HOST_PORT:-8081}:8080"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - net
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    command: >
+      sh -c "printf 'pid /tmp/nginx.pid;
+      events {}
+      http {
+        client_body_temp_path /tmp/client_temp;
+        proxy_temp_path /tmp/proxy_temp;
+        fastcgi_temp_path /tmp/fastcgi_temp;
+        uwsgi_temp_path /tmp/uwsgi_temp;
+        scgi_temp_path /tmp/scgi_temp;
+        upstream backend { server backend:8081; }
+        server {
+          listen 8080;
+          location / { proxy_pass http://backend; }
+        }
+      }' > /tmp/nginx.conf && nginx -c /tmp/nginx.conf -g 'daemon off;'"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    mem_limit: 128m
+    cpus: "0.25"
 
   frontend:
     build:
@@ -72,4 +112,3 @@ volumes:
 secrets:
   secrets.example:
     file: ./secrets/secrets.example
-
