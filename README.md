@@ -5,5 +5,6 @@ backend Dockerfile- первая стадия собирает Go-приложе
 backend Dockerfile- вторая стадия запускает файл на образе alpine на порту 8081
 
 Запуск:
+```bash
 docker compose build
 docker compose up -d
