@@ -11,6 +11,8 @@ services:
     networks:
       - net
     read_only: true
+    volumes:
+      - backend-data:/app/data
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8081/health"]
       interval: 30s
@@ -64,6 +66,10 @@ networks:
   net:
     driver: bridge
 
+volumes:
+  backend-data:
+
 secrets:
   secrets.example:
     file: ./secrets/secrets.example
+
